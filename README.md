@@ -73,6 +73,6 @@ releases/                Compiled demo APK, when included in the submission bund
 
 ## Submission
 
-Upload the **extracted repository contents**, including `README.md`, `android`, `backend`, `.github`, and `docs`, to GitHub. Do not upload only the ZIP. Attach the APK to a GitHub Release, or retain the small supplied APK under `releases/`. Include a short two-phone demonstration video after conducting the physical test checklist. The repository is prepared locally; it has not been published to a GitHub account.
+Upload the **extracted repository contents**, including `README.md`, `android`, `backend`, `.github`, and `docs`, to GitHub. Do not upload only the ZIP. Attach the APK to a GitHub Release, or retain the small supplied APK under `releases/`. Include a short two-phone demonstration video after conducting the physical test checklist. The project is published at https://github.com/PRINCE-0101/ProxyProof. The signed demo APK is included under `releases/`.
 
 Be ready to explain the code and any assistance used according to your club's submission rules. Add your own observed BLE measurements and actual demo evidence; do not present unperformed hardware tests as completed.
