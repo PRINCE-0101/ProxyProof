@@ -1,0 +1,27 @@
+test_admin_device_change (test_server.AttendanceTests.test_admin_device_change) ... ok
+test_checkin_idempotent (test_server.AttendanceTests.test_checkin_idempotent) ... ok
+test_closed_session (test_server.AttendanceTests.test_closed_session) ... ok
+test_csv_safe (test_server.AttendanceTests.test_csv_safe) ... ok
+test_enrolment_snapshot (test_server.AttendanceTests.test_enrolment_snapshot) ... ok
+test_expired_beacon (test_server.AttendanceTests.test_expired_beacon) ... ok
+test_expired_session (test_server.AttendanceTests.test_expired_session) ... ok
+test_invalid_rssi (test_server.AttendanceTests.test_invalid_rssi) ... ok
+test_login_rate_limit (test_server.AttendanceTests.test_login_rate_limit) ... ok
+test_logout_revokes_token (test_server.AttendanceTests.test_logout_revokes_token) ... ok
+test_manual_add_and_percentage (test_server.AttendanceTests.test_manual_add_and_percentage) ... ok
+test_manual_removal_blocks_remark (test_server.AttendanceTests.test_manual_removal_blocks_remark) ... ok
+test_one_device_one_account (test_server.AttendanceTests.test_one_device_one_account) ... ok
+test_real_http_transport (test_server.AttendanceTests.test_real_http_transport) ... ok
+test_session_owner (test_server.AttendanceTests.test_session_owner) ... ok
+test_signature_replay (test_server.AttendanceTests.test_signature_replay) ... ok
+test_student_cannot_create (test_server.AttendanceTests.test_student_cannot_create) ... ok
+test_token_rotation_grace (test_server.AttendanceTests.test_token_rotation_grace) ... ok
+test_too_few_samples (test_server.AttendanceTests.test_too_few_samples) ... ok
+test_weak_signal (test_server.AttendanceTests.test_weak_signal) ... ok
+test_wrong_device_signature (test_server.AttendanceTests.test_wrong_device_signature) ... ok
+test_wrong_token (test_server.AttendanceTests.test_wrong_token) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 18.798s
+
+OK
