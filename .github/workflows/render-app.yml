@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/render-app.yml'
+      - 'android/**'
   workflow_dispatch:
 
 permissions:
