@@ -8,9 +8,9 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /** Foreground-only BLE. Demo manufacturer ID 0xFFFF, version byte + session + token. */
-@android.annotation.SuppressLint("MissingPermission") // MainActivity gates all operations on runtime permission grants.
+@android.annotation.SuppressLint("MissingPermission")
 final class BleController {
-    interface Listener { void status(String text); void beacon(int sid,String token,List<Integer> samples); }
+    interface Listener { void status(String text); void progress(int count); void beacon(int sid,String token,List<Integer> samples); }
     private static final int COMPANY=0xFFFF;
     private final BluetoothAdapter adapter;
     private final Listener listener;
@@ -29,9 +29,10 @@ final class BleController {
     boolean ready() { return adapter!=null && adapter.isEnabled(); }
     void scan() {
         if(scanCallback!=null) return;
-        if(!ready()){listener.status("Turn on Bluetooth, then tap Retry Bluetooth.");return;}
+        if(!ready()){listener.status("Turn on Bluetooth, then restart the scan.");return;}
         scanner=adapter.getBluetoothLeScanner();
         if(scanner==null){listener.status("BLE scanner is unavailable.");return;}
+        listener.progress(0);
         scanCallback=new ScanCallback(){
             @Override public void onScanResult(int type,ScanResult result){
                 if(result.getScanRecord()==null)return;
@@ -40,15 +41,15 @@ final class BleController {
                 ByteBuffer buffer=ByteBuffer.wrap(bytes); buffer.get(); int sid=buffer.getInt(); byte[] token=new byte[8];buffer.get(token);
                 String hex=DeviceKey.hex(token), id=sid+":"+hex;
                 long now=System.currentTimeMillis();
-                // Bound memory and ensure all samples are recent, from one rotating token.
                 if(last.size()>50){last.clear();samples.clear();}
                 if(now-last.getOrDefault(id,0L)>12000)samples.remove(id);
                 ArrayList<Integer> readings=samples.computeIfAbsent(id,k->new ArrayList<>());
                 if(now-last.getOrDefault(id,0L)<180)return;
                 last.put(id,now); readings.add(result.getRssi());
+                listener.progress(Math.min(5,readings.size()));
                 if(readings.size()>=5){listener.beacon(sid,hex,new ArrayList<>(readings));readings.clear();}
             }
-            @Override public void onScanFailed(int code){ scanCallback=null; listener.status("BLE scan failed ("+code+"). Wait a few seconds and retry."); }
+            @Override public void onScanFailed(int code){ scanCallback=null;listener.progress(0);listener.status("BLE scan failed ("+code+"). Wait a few seconds and retry."); }
         };
         ScanFilter filter=new ScanFilter.Builder().setManufacturerData(COMPANY,new byte[]{1},new byte[]{(byte)255}).build();
         scanner.startScan(Collections.singletonList(filter),new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(),scanCallback);
@@ -73,5 +74,5 @@ final class BleController {
             new AdvertiseData.Builder().addManufacturerData(COMPANY,payload.array()).build(),advertiseCallback);
     }
     void stopAdvertising(){ if(advertiser!=null && advertiseCallback!=null)try{advertiser.stopAdvertising(advertiseCallback);}catch(SecurityException ignored){} advertiseCallback=null;broadcasting=""; }
-    void stop(){ if(scanner!=null && scanCallback!=null)try{scanner.stopScan(scanCallback);}catch(SecurityException ignored){} scanCallback=null;stopAdvertising();samples.clear();last.clear(); }
+    void stop(){ if(scanner!=null && scanCallback!=null)try{scanner.stopScan(scanCallback);}catch(SecurityException ignored){} scanCallback=null;stopAdvertising();samples.clear();last.clear();listener.progress(0); }
 }
