@@ -28,7 +28,7 @@ jobs:
         with:
           packages: platform-tools platforms;android-35 build-tools;35.0.0
       - uses: gradle/actions/setup-gradle@v4
-      - run: chmod +x gradlew && ./gradlew assembleDebug lintDebug --no-daemon
+      - run: gradle assembleDebug lintDebug --no-daemon
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:
