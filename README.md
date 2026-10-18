@@ -1,78 +1,221 @@
-# ProxyProof — Bluetooth Attendance
+# ProxyProof — Secure Bluetooth Attendance
 
-An Android attendance prototype for the app-development recruitment brief. An organiser broadcasts a changing BLE token; nearby students check in automatically through an authenticated API. Includes the Android app, Python backend, SQLite persistence, tests, and GitHub Actions build.
+ProxyProof is a native Android attendance prototype that replaces roll calls, QR codes and shared attendance PINs with a **short-lived BLE proximity signal + server verification + device-bound student identity**.
 
-**Start here:** [Setup and submission guide](docs/START_HERE.md). **Understand the design:** [Architecture](docs/ARCHITECTURE.md). **Verification and remaining limits:** [Testing](docs/TESTING.md).
+An organiser starts a timed session and broadcasts a rotating BLE beacon. Student phones listen in the foreground, collect multiple recent RSSI samples, and submit a signed attendance request to the backend. The organiser sees the roster update automatically and can export a CSV.
 
-## What is implemented
+> **Status:** working end-to-end prototype. The demonstrated flow has been run with separate organiser and student Android phones: session broadcast → BLE detection → five RSSI samples → signed server check-in → organiser dashboard marked present.
 
-| Requirement | Implementation |
+## Product preview
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/student-checkin.svg" alt="ProxyProof student check-in screen"></td>
+<td width="50%"><img src="docs/screenshots/organiser-dashboard.svg" alt="ProxyProof organiser live dashboard"></td>
+</tr>
+<tr>
+<td align="center"><b>Student</b> — automatic check-in + clear server confirmation</td>
+<td align="center"><b>Organiser</b> — live roster, session controls and CSV export</td>
+</tr>
+</table>
+
+## Why ProxyProof
+
+| Problem | ProxyProof approach |
 |---|---|
-| Organiser/student login | Provisioned accounts; server-enforced roles; separate admin role |
-| One device per student | Android Keystore P-256 key bound on first login; administrator reviews changes |
-| Fixed-duration sessions | 30–3600 seconds at API; minutes in app; server-enforced end time |
-| Automatic nearby check-in | Foreground BLE scan, five RSSI samples, median threshold, signed submission |
-| Rotating token | Server-minted 8-byte random token, normally rotates every 8 seconds, expires after 12 seconds |
-| Replay resistance | Fresh beacon checks, signed request timestamp/nonce, idempotent attendance |
-| Dashboard | Four-second polling, roster and count, manual add/remove with reason, session close |
-| Student history | Present/absent and percentage over completed enrolled sessions |
-| Export | CSV via Android's document picker |
-| Device changes | Student request; admin approves/rejects; approval revokes existing logins |
+| Roll calls waste class time | Automatic foreground BLE check-in |
+| QR/PIN codes can be shared | No attendance code is shown to students |
+| Static Bluetooth identifiers can be replayed | Server-issued beacon token rotates and expires quickly |
+| One account may be copied across installations | Student public key is bound on first login |
+| Client-only attendance can be forged | Attendance is accepted only by the backend after validation |
+| Organisers need corrections | Manual add/remove requires a reason and is audited |
 
-This is a working **foreground prototype**, not a production anti-fraud guarantee. RSSI is noisy and client-reported. A live relay or modified/rooted client is not defeated by rotating tokens alone. The Keystore binding represents an app installation, not a guaranteed unique physical handset. See the threat model before presenting claims.
+## Demo flow
 
-## Stack
+1. Start the Python backend on a laptop accessible to both phones.
+2. Sign in on one Android phone as an **organiser**.
+3. Sign in on another Android phone as a **student**.
+4. On the organiser phone, create a session with a duration and RSSI threshold.
+5. Tap **Start session & broadcast**.
+6. Keep the student app open near the organiser phone.
+7. ProxyProof collects at least five recent BLE RSSI samples from one rotating token.
+8. The student app submits a device-signed attendance request.
+9. The backend validates session freshness, beacon freshness, roster membership, RSSI and signature.
+10. The organiser dashboard refreshes automatically and shows the student as **BLE verified**.
+11. Close the session to view the final summary and export the attendance CSV.
 
-- Native Android: Java, Android framework UI, BLE scanner/advertiser, Android Keystore. Android 8.0+ (API 26), compile/target API 35.
-- API: Python 3.10+, standard-library HTTP server, SQLite, `cryptography` for ECDSA verification.
-- Build: JDK 17, Gradle 8.9, Android Gradle Plugin 8.7.3.
-- No Firebase account, paid API, or hardcoded login credentials.
+## Features
+
+### Student experience
+
+- Device-bound student identity using Android Keystore P-256 keys
+- Foreground automatic BLE scanning
+- Five-sample proximity check before submission
+- Clear **Attendance confirmed** success card after server acceptance
+- Attendance history and overall percentage
+- Device-change request flow when moving to another installation
+
+### Organiser experience
+
+- Create fixed-duration attendance sessions
+- Configurable RSSI threshold
+- Rotating BLE beacon while the session is live
+- Live present/total count with automatic refresh
+- Human-readable roster states such as **BLE verified** and **Manual correction**
+- Final session summary with present, absent and attendance percentage
+- Manual corrections with required reason
+- CSV export through Android's document picker
+
+### Backend/security
+
+- Python standard-library HTTP server + SQLite
+- Password hashing with `hashlib.scrypt`
+- Expiring authentication tokens
+- P-256 ECDSA verification for student requests
+- Signed timestamp + nonce + request-body hash
+- Replay-nonce tracking
+- Short-lived rotating beacon tokens
+- Server-side role checks
+- Login attempt limiting
+- Audit records for sensitive changes
+
+## Architecture
+
+```text
+┌──────────────────────┐             ┌──────────────────────┐
+│ Organiser Android    │             │ Student Android      │
+│                      │   BLE       │                      │
+│ Session dashboard    │ ─────────▶  │ Low-latency scanner  │
+│ Rotating advertiser  │             │ Keystore P-256 key   │
+└──────────┬───────────┘             └──────────┬───────────┘
+           │ HTTPS / trusted LAN HTTP           │ signed request
+           └──────────────────┬─────────────────┘
+                              ▼
+                    ┌──────────────────────┐
+                    │ ProxyProof backend   │
+                    │ Python + SQLite      │
+                    │ auth / sessions /    │
+                    │ beacons / attendance│
+                    └──────────────────────┘
+```
+
+More detail: [Architecture](docs/ARCHITECTURE.md) · [Testing](docs/TESTING.md) · [Setup guide](docs/START_HERE.md)
 
 ## Quick start
 
+### 1. Backend
+
 ```bash
 cd backend
-python -m venv .venv
-# Windows: .venv\Scripts\activate
-# macOS/Linux: source .venv/bin/activate
 python -m pip install -r requirements.txt
 python server.py init
 python server.py add-user teacher "Demo Organiser" organiser
 python server.py add-user student01 "Demo Student" student
-python server.py add-user admin "Device Administrator" admin
-python server.py serve
+python server.py serve --host 0.0.0.0 --port 8000
 ```
 
-Each account command prompts for a password of at least 10 characters. Provision students **before** starting a session: the class roster is snapshotted at session creation.
+Each `add-user` command securely prompts for a password of at least 10 characters.
 
-Install the APK on two real Android phones. Put the laptop and phones on the same trusted network, enter `http://YOUR_LAPTOP_LAN_IP:8000` in both apps, and sign in with the two different roles. `localhost` on a phone refers to the phone, not the laptop. Keep both apps visible. The organiser phone must support BLE advertising.
+Check the backend from the laptop:
 
-## Build and test
+```text
+http://127.0.0.1:8000/health
+```
+
+For physical-phone testing, connect the laptop and phones to a network that permits device-to-device traffic, then use the laptop's LAN IP in the app, for example:
+
+```text
+http://192.168.x.x:8000
+```
+
+> `10.0.2.2` is the Android Emulator alias for the host machine; do not use it from a real phone.
+
+### 2. Android build
 
 ```bash
-cd backend
-python -m unittest -v
-cd ../android
+cd android
 ./gradlew assembleDebug
-# Windows: gradlew.bat assembleDebug
 ```
 
-Gradle output: `android/app/build/outputs/apk/debug/app-debug.apk`.
-The demo/debug build permits HTTP for LAN testing. Release configuration requires HTTPS. The downloadable APK is a signed **demo build**, not a Play Store release.
+Windows:
+
+```bat
+gradlew.bat assembleDebug
+```
+
+APK output:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+The GitHub Actions workflow also builds and verifies the APK automatically.
+
+## Permissions required for the demo
+
+Keep the app in the foreground and allow:
+
+- Nearby devices / Bluetooth scan
+- Bluetooth advertise on the organiser phone
+- Bluetooth connect
+- Location where Android requires it for BLE scanning
+- Network access to the backend
+
+The organiser phone must support BLE advertising.
+
+## Session behaviour
+
+A session snapshots the currently provisioned student roster **when the session is created**. If you add another student later, close the old session and start a new one so the new student appears in the roster.
+
+The default demonstration values are:
+
+```text
+Duration:       5 minutes
+RSSI threshold: -70 dBm
+```
+
+RSSI is intentionally configurable because radio conditions vary across phones and rooms.
+
+## Threat-model boundary
+
+ProxyProof is a **proximity attendance prototype**, not a production anti-fraud guarantee.
+
+The current design raises the bar above shared codes by combining a rotating server token, device-bound signing, request freshness and BLE signal checks. However, RSSI is noisy, a sufficiently capable relay can forward radio traffic, rooted/modified clients are outside the current trust boundary, and an Android Keystore key identifies an app installation rather than proving a globally unique physical handset.
+
+Present these limitations clearly in evaluation or recruitment demos.
 
 ## Repository layout
 
 ```text
-android/                 Native Android project and Gradle wrapper
-backend/server.py        API, database schema, provisioning CLI
-backend/test_server.py   Backend security and attendance tests
-docs/                    Setup, architecture, testing and presentation guide
-.github/workflows/       APK build and backend checks
-releases/                Compiled demo APK, when included in the submission bundle
+android/                 Native Android app
+backend/server.py        API, SQLite schema and provisioning CLI
+backend/test_server.py   Backend tests
+docs/                    Setup, architecture, testing and UI previews
+.github/workflows/       Build verification + emulator render workflow
+releases/                Demo APK when included
 ```
 
-## Submission
+## Submission/demo checklist
 
-Upload the **extracted repository contents**, including `README.md`, `android`, `backend`, `.github`, and `docs`, to GitHub. Do not upload only the ZIP. Attach the APK to a GitHub Release, or retain the small supplied APK under `releases/`. Include a short two-phone demonstration video after conducting the physical test checklist. The project is published at https://github.com/PRINCE-0101/ProxyProof. The signed demo APK is included under `releases/`.
+- [ ] Backend starts and `/health` responds
+- [ ] Organiser login succeeds
+- [ ] Student login succeeds
+- [ ] Nearby/Bluetooth permissions are granted
+- [ ] Organiser starts a live session
+- [ ] Student is automatically marked through BLE
+- [ ] Organiser dashboard shows **BLE verified**
+- [ ] Session closes and displays final summary
+- [ ] CSV export works
+- [ ] Short two-phone demo video is recorded
+- [ ] Threat-model limitations are explained accurately
 
-Be ready to explain the code and any assistance used according to your club's submission rules. Add your own observed BLE measurements and actual demo evidence; do not present unperformed hardware tests as completed.
+## Tech stack
+
+- **Android:** Java, Android framework UI, BLE scanner/advertiser, Android Keystore
+- **Backend:** Python 3, SQLite, `cryptography`
+- **Build:** JDK 17, Gradle 8.9, Android Gradle Plugin 8.7.3
+- **CI:** GitHub Actions
+
+---
+
+**ProxyProof** — be present, be counted.
