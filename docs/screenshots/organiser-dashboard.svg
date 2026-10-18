@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="780" viewBox="0 0 360 780">
+  <rect width="360" height="780" rx="34" fill="#101923"/>
+  <text x="28" y="54" fill="#5EE6B0" font-family="Arial,sans-serif" font-size="15" font-weight="700">●  PROXYPROOF</text>
+  <text x="28" y="82" fill="#A3B6C6" font-family="Arial,sans-serif" font-size="13">Demo Organiser • organiser</text>
+  <text x="28" y="128" fill="#EDF4FA" font-family="Arial,sans-serif" font-size="27" font-weight="700">App Development • Round 1</text>
+  <text x="28" y="155" fill="#5EE6B0" font-family="Arial,sans-serif" font-size="12" font-weight="700">● LIVE • 18 seconds left</text>
+  <rect x="22" y="178" width="316" height="240" rx="20" fill="#1B2835" stroke="#2B3D4D"/>
+  <text x="42" y="210" fill="#5EE6B0" font-family="Arial,sans-serif" font-size="11" font-weight="700">LIVE SESSION</text>
+  <text x="42" y="265" fill="#5EE6B0" font-family="Arial,sans-serif" font-size="48" font-weight="700">2 / 2</text>
+  <text x="42" y="294" fill="#A3B6C6" font-family="Arial,sans-serif" font-size="13">students checked in • refreshes every 4 seconds</text>
+  <text x="42" y="318" fill="#A3B6C6" font-family="Arial,sans-serif" font-size="12">Bluetooth beacon rotates automatically.</text>
+  <rect x="42" y="338" width="276" height="48" rx="12" fill="#5EE6B0"/>
+  <text x="180" y="368" text-anchor="middle" fill="#101923" font-family="Arial,sans-serif" font-size="14" font-weight="700">Close attendance session</text>
+  <rect x="22" y="438" width="316" height="94" rx="20" fill="#1B2835" stroke="#2B3D4D"/>
+  <text x="42" y="470" fill="#5EE6B0" font-family="Arial,sans-serif" font-size="18" font-weight="700">✓  Prince</text>
+  <text x="42" y="498" fill="#A3B6C6" font-family="Arial,sans-serif" font-size="12">prince • Present • BLE verified</text>
+  <rect x="22" y="548" width="316" height="94" rx="20" fill="#1B2835" stroke="#2B3D4D"/>
+  <text x="42" y="580" fill="#5EE6B0" font-family="Arial,sans-serif" font-size="18" font-weight="700">✓  Aditya</text>
+  <text x="42" y="608" fill="#A3B6C6" font-family="Arial,sans-serif" font-size="12">student02 • Present • BLE verified</text>
+  <rect x="42" y="665" width="276" height="48" rx="12" fill="#5EE6B0"/>
+  <text x="180" y="695" text-anchor="middle" fill="#101923" font-family="Arial,sans-serif" font-size="14" font-weight="700">Export attendance CSV</text>
+  <text x="28" y="748" fill="#5EE6B0" font-family="Arial,sans-serif" font-size="12">Home</text>
+  <text x="180" y="748" text-anchor="middle" fill="#A3B6C6" font-family="Arial,sans-serif" font-size="12">History</text>
+  <text x="332" y="748" text-anchor="end" fill="#A3B6C6" font-family="Arial,sans-serif" font-size="12">Account</text>
+</svg>
