@@ -46,6 +46,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
+            adb shell settings put global hide_error_dialogs 1 || true
             adb install -r android/app/build/outputs/apk/debug/app-debug.apk
             adb shell pm grant in.proxyproof.app.demo android.permission.BLUETOOTH_SCAN || true
             adb shell pm grant in.proxyproof.app.demo android.permission.BLUETOOTH_ADVERTISE || true
@@ -53,6 +54,8 @@ jobs:
             adb shell pm grant in.proxyproof.app.demo android.permission.ACCESS_FINE_LOCATION || true
             adb shell monkey -p in.proxyproof.app.demo -c android.intent.category.LAUNCHER 1
             sleep 6
+            adb shell input keyevent 4 || true
+            sleep 1
             adb exec-out screencap -p > proxyproof-render.png
 
       - name: Upload rendered screenshot
